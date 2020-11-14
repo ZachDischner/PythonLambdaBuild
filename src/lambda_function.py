@@ -12,3 +12,4 @@ def handler(event, context):
     obj = s3.get_object(Bucket='public-bucket-for-demo', Key='data.csv')
     df = pd.read_csv(io.BytesIO(obj['Body'].read()))
     print(f"CSV: {df.to_json()}")
+    

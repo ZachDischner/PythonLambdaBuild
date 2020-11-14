@@ -1,3 +1,10 @@
+## What
+This is a demonstrative project that takes your local python environment and bundles it up into an AWS Lambda compatible zipfile using Docker, even works with typically troublesome compiled libs like `numpy` and `pandas`. 
+
+It uses `pipenv` to mange your local environment, so you must have it installed. You can use `conda`, `pyenv`, or just manually manage `requirements.txt`.
+
+In this simple project, a lambda function just imports a few tricky libraries and reads a dataframe from a 
+
 ## Prerequisites
 
 #### Docker
@@ -9,18 +16,33 @@ brew cask install docker
 ```
 
 #### Python Env
-IDK. Figure out a better project-local python interpreter setup. Just have an env you want to develop against and deploy a variant thereof. 
+Using pipenv, create an environment based on the pipfile here. If you don't use pipenv, just know that you'll have to mange `requirements.txt` manually.
 
-Modify as you will to use `pip` instead of pipenv. Just need to freeze your requirements manually. 
+**Create an environment for this project**
 ```
-conda create -n py38test python=3.8
-pipenv install --user pipenv
+pipenv install
 ```
 
 ## DITL
-Make sure your env is activated when working on this project
+Make sure you are developing against the appropriate environment for this project. Nominally using pipenv.
+
+**Example** I want to use the `requests` module in my lambda handler.
+
+1. Install the module for local testing. This will update the local `Pipenv` file and install it in your local venv.
 ```
-conda activate py38test
+pipenv install requests
+```
+
+2. Add `import requests` to the `lambda_function` .py
+3. Create your artifact
+```
+./build.sh
+```
+4. Upload your zip to a lambda function via the AWS console, CFN, CDK, whatever
+5. Go run it, see that `requests` was imported successfully
+6. Cleanup
+```
+pipenv uninstall requests
 ```
 
 #### Development
@@ -29,10 +51,7 @@ Drop into a shell to prototype if you want
 pipenv run ipython
 ```
 
-Do your stuff in this dir, `pipenv install` your own requirements, whatever
-```
-pipenv install numpy pandas
-```
+Develop against this dir, `pipenv install` your own requirements. When you're ready to zip up an artifact for Lambda, see below. 
 
 #### Artifact
 Iterate, test, write code, then build a zip for lambda!
@@ -44,7 +63,7 @@ Iterate, test, write code, then build a zip for lambda!
 Inspect `build.sh`, if you want to drop into the built docker container's shell, you can do something like
 
 ```
-docker build --tag pythonbundler .
+docker build --nocache --tag pythonbundler .
 docker run -it --detach --name test pythonbundler
 docker exec -it test bash
 # Don't forget to 
@@ -83,3 +102,4 @@ Iterate: `cd $LAMBDA_BUILD_DIR && ./build.sh && cd $INFRA_DIR && cdk deploy`. Bo
 ## TODO
 * Maybe pick a pure baseline image
 * Figure out a faster build/run setup where you don't need to install deps at every iteration
+* Get away from `RUN` commands in docker. Should instead copy the build script in and `EXEC` it I think
