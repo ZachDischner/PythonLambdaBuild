@@ -10,6 +10,6 @@ pipenv lock --requirements > requirements.txt
 CONTAINER_NAME=bundlercontainer
 docker build --no-cache --tag pythonbundler .
 docker run -it --detach --name $CONTAINER_NAME pythonbundler
-docker cp $CONTAINER_NAME:/op/assets/lambda.zip .
+docker cp $CONTAINER_NAME:/opt/assets/lambda.zip .
 # docker container kill $CONTAINER_NAME
 # docker container rm $CONTAINER_NAME
