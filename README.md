@@ -24,6 +24,8 @@ aws lambda create-function --function-name DEMO_LAMBDA --runtime python3.8 --han
 aws lambda invoke --function-name DEMO_LAMBDA out --log-type Tail | jq -r '.LogResult' | base64 --decode
 
 # Now cleanup
+aws iam detach-role-policy --role-name $DEMO_LAMBDA_ROLE --policy-arn arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+aws iam detach-role-policy --role-name $DEMO_LAMBDA_ROLE --policy-arn arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
 aws iam delete-role --role-name DEMO_LAMBDEA_ROLE
 aws lambda delete-function --function-name DEMO_LAMBDA
 ```
