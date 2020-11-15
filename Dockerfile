@@ -14,6 +14,8 @@ FROM lambci/lambda:build-python3.8
 
 WORKDIR /opt/assets
 ENV WORKDIR /opt/assets
+RUN rm -rf $WORKDIR/*
+
 
 # Copy requirements.txt into the working dir
 COPY requirements.txt "$WORKDIR"

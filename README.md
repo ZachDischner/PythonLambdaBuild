@@ -1,3 +1,32 @@
+## TL;DR
+Zip up a lambda env with docker. Follow these steps to deploy a simple python function, with numpy and pandas included.
+
+```
+# Clone and build zip
+git clone https://github.com/ZachDischner/PythonLambdaBuild.git && cd PythonLambdaBuild
+
+# Create your local env
+pipenv install
+
+# Build the local lambda/env into a zip
+./build.sh
+
+# Live demo - create a lambda, role, and invoke
+ROLE_ARN=$(aws iam create-role --role-name DEMO_LAMBDEA_ROLE --assume-role-policy-document '{"Version": "2012-10-17","Statement": [{ "Effect": "Allow", "Principal": {"Service": "lambda.amazonaws.com"}, "Action": "sts:AssumeRole"}]}' | jq -r '.Role.Arn')
+
+aws iam attach-role-policy --role-name DEMO_LAMBDEA_ROLE --policy-arn arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+
+aws iam attach-role-policy --role-name DEMO_LAMBDEA_ROLE --policy-arn arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
+
+aws lambda create-function --function-name DEMO_LAMBDA --runtime python3.8 --handler lambda_function.handler --zip-file fileb://`pwd`/lambda.zip --role $ROLE_ARN --region us-east-1
+
+# Invoke it, you should see numpy and pandas borne outputs!
+aws lambda invoke --function-name DEMO_LAMBDA out --log-type Tail | jq -r '.LogResult' | base64 --decode
+
+# Now cleanup
+aws iam delete-role --role-name DEMO_LAMBDEA_ROLE
+aws lambda delete-function --function-name DEMO_LAMBDA
+```
 ## What
 This is a demonstrative project that takes your local python environment and bundles it up into an AWS Lambda compatible zipfile using Docker, even works with typically troublesome compiled libs like `numpy` and `pandas`. 
 
