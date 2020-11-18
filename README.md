@@ -12,11 +12,11 @@ pipenv install
 ./build.sh
 
 # Live demo - create a lambda, role, and invoke
-ROLE_ARN=$(aws iam create-role --role-name DEMO_LAMBDEA_ROLE --assume-role-policy-document '{"Version": "2012-10-17","Statement": [{ "Effect": "Allow", "Principal": {"Service": "lambda.amazonaws.com"}, "Action": "sts:AssumeRole"}]}' | jq -r '.Role.Arn')
+ROLE_ARN=$(aws iam create-role --role-name DEMO_LAMBDA_ROLE --assume-role-policy-document '{"Version": "2012-10-17","Statement": [{ "Effect": "Allow", "Principal": {"Service": "lambda.amazonaws.com"}, "Action": "sts:AssumeRole"}]}' | jq -r '.Role.Arn')
 
-aws iam attach-role-policy --role-name DEMO_LAMBDEA_ROLE --policy-arn arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+aws iam attach-role-policy --role-name DEMO_LAMBDA_ROLE --policy-arn arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
 
-aws iam attach-role-policy --role-name DEMO_LAMBDEA_ROLE --policy-arn arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
+aws iam attach-role-policy --role-name DEMO_LAMBDA_ROLE --policy-arn arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
 
 aws lambda create-function --function-name DEMO_LAMBDA --runtime python3.8 --handler lambda_function.handler --zip-file fileb://`pwd`/lambda.zip --role $ROLE_ARN --region us-east-1
 
@@ -24,17 +24,20 @@ aws lambda create-function --function-name DEMO_LAMBDA --runtime python3.8 --han
 aws lambda invoke --function-name DEMO_LAMBDA out --log-type Tail | jq -r '.LogResult' | base64 --decode
 
 # Now cleanup
-aws iam detach-role-policy --role-name $DEMO_LAMBDA_ROLE --policy-arn arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
-aws iam detach-role-policy --role-name $DEMO_LAMBDA_ROLE --policy-arn arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
-aws iam delete-role --role-name DEMO_LAMBDEA_ROLE
+aws iam detach-role-policy --role-name DEMO_LAMBDA_ROLE --policy-arn arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+aws iam detach-role-policy --role-name DEMO_LAMBDA_ROLE --policy-arn arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
+aws iam delete-role --role-name DEMO_LAMBDA_ROLE
 aws lambda delete-function --function-name DEMO_LAMBDA
 ```
+
 ## What
-This is a demonstrative project that takes your local python environment and bundles it up into an AWS Lambda compatible zipfile using Docker, even works with typically troublesome compiled libs like `numpy` and `pandas`. 
+This is a demonstrative project that takes your local python environment and bundles it up into an AWS Lambda compatible zipfile using Docker, even works with typically troublesome compiled libs like `numpy` and `pandas`. It does so with two scripts:
+1. `buildLocalEnv.sh` - builds a zip locally from `requirements.txt` and your source code in `src`. Can run this wherever.
+2. `build.sh` - essentially runs `buildLocalEnv.sh` from within a docker container, to build a zip file of this project suitable for AWS lambda
 
-It uses `pipenv` to mange your local environment, so you must have it installed. You can use `conda`, `pyenv`, or just manually manage `requirements.txt`.
+It uses `pipenv` to mange your local environment, so you must have it installed. You can always use `conda`, `pyenv`, or just manually manage `requirements.txt`.
 
-In this simple project, a lambda function just imports a few tricky libraries and reads a dataframe from a 
+In this simple project, a lambda function just imports a few tricky libraries and reads a dataframe from an object in a public bucket in s3.
 
 ## Prerequisites
 
